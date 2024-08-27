@@ -35,8 +35,8 @@ or with a reference like [this other link to the Qt homepage][1].
 ### Known issues
 
 1. The images in `infolist` folder shows gaussian blur with software and 
-opencl acceleration. Apparently the gpu enhancement is SLOWER and performs
-like multiple kernel convolving.
+opencl acceleration. ~~Apparently the gpu enhancement is SLOWER and performs
+like multiple kernel convolving.~~
 2. The OpenCL looks like it performs like 5-6 times the convolving for unknown
 reason. To be investigated.
 3. UI needs a dynamic resize of the layout.
