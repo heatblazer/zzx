@@ -37,6 +37,10 @@ static const char* src3x3= R"(
         MyMat[k] = (0xFF000000) | (resr & 0xFFu) << 16 | (resg & 0xFFu) << 8 | (resb & 0xFFu);
         resr=resg=resb=r=g=b=0;
         pixels[y * w + x] = MyMat[4];
+//        if (x >= get_global_size(0) && y >= get_global_size(1)) return;
+//        else {
+//            barrier(CLK_LOCAL_MEM_FENCE);
+//        }
     }
 )";
 
@@ -141,8 +145,8 @@ void gpu_kernel::conv3x3(unsigned int *pixels, unsigned int x, unsigned int y, u
 {
 #ifndef HWACELL_ENABLED
     size_t dim = 3;
-    size_t global_offset[] = {x, y,0};
-    size_t global_size[] = {w, h,9};
+    size_t global_offset[] = {x, y, 0};
+    size_t global_size[] = {w, h, 9};
     size_t wsize = 0 ;
     size_t globwsize = w * h * sizeof(unsigned int);
     cl_mem bufferx,  bufferkern;

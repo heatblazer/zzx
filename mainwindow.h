@@ -16,23 +16,6 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 
-
-enum class eConvType
-{
-    GaussianBlur ,
-    Sharper,
-    IntensivSharper,
-    Identity,
-    Original,
-    Custom3x3,
-    Custom5x5,
-    COUNT
-};
-
-
-struct kernel_t;
-
-
 struct Warmer : public QThread
 {    Q_OBJECT
 
@@ -93,6 +76,7 @@ private slots:
     void hEnableMT(Qt::CheckState state);
     void hEnableGPU(Qt::CheckState state);
     void hTimeout();
+    void hSave();
 
 private:
     int m_val;
@@ -100,6 +84,8 @@ private:
     bool m_gpuAccel;
     std::vector<unsigned int> m_rgbdata;
     QImage m_currImg;
+    QImage m_currSaveImg;
+
     kernel_t* pCustKernel;
     QString m_filename;
     QPixmap m_currentPixmap;

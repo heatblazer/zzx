@@ -9,6 +9,9 @@
 #include <thread>
 #include <QDebug>
 #include <QElapsedTimer>
+#include <QMessageBox>
+#include <cstdio>
+
 #define CONCAT_(x,y) x##y
 #define CONCAT(x,y) CONCAT_(x,y)
 
@@ -159,7 +162,7 @@ static  kernel_t gaussianConv{_blur};
 
 static kernel_t sharpConv{_sharp};
 
-static kernel_t iSharpConv {_topsobel};
+static kernel_t iTopSobel {_topsobel};
 
 static kernel_t identConv {_ident};
 
@@ -193,7 +196,7 @@ void MainWindow::worker_helper::doWork()
                         newpix = sharpConv * m_localCtx.fRGB;
                         break;
                     case eConvType::IntensivSharper:
-                        newpix = iSharpConv * m_localCtx.fRGB;
+                        newpix = iTopSobel * m_localCtx.fRGB;
                         break;
                     case eConvType::Identity:
                         newpix = identConv * m_localCtx.fRGB;
@@ -262,7 +265,7 @@ MainWindow::MainWindow(QWidget *parent)
     for(int i=0; i < 9; i++) m_spin3x3[i] = new QDoubleSpinBox{parent};
     for(int i=0; i < 25; i++) m_spin5x5[i] = new QDoubleSpinBox{parent};
 
-    memset(&m_rgbctx, 0 , sizeof(m_rgbctx));
+    memset((void*)&m_rgbctx, 0 , sizeof(m_rgbctx));
     pCustKernel = new kernel_t;
 //    ui->grayscale->setDisabled(true);
 //    ui->grayscale->setDown(true);
@@ -281,7 +284,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_imgScreen.setBackgroundRole(QPalette::Base);
 //    m_imgScreen.setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
 //    m_imgScreen.setScaledContents(true);
-
 
     ui->scrollArea->setWidget(&m_imgScreen);
     ui->scrollArea->setWidgetResizable(true);
@@ -353,6 +355,7 @@ void MainWindow::asyncInit()
     QObject::connect(ui->mtEnabled, SIGNAL(checkStateChanged(Qt::CheckState)), this , SLOT(hEnableMT(Qt::CheckState)));
     QObject::connect(ui->gpuAccelEn, SIGNAL(checkStateChanged(Qt::CheckState)), this , SLOT(hEnableGPU(Qt::CheckState)));
     //QObject::connect(&this->m_warmer, SIGNAL(timeout()), this, SLOT(hTimeout()));
+    QObject::connect(ui->saveImg, SIGNAL(clicked()), this, SLOT(hSave()));
     connect3x3();
     connect5x5();
 //    m_warmer.start();
@@ -389,7 +392,7 @@ void MainWindow::convolveNxN(const QImage &qimg, eConvType type)
                     newpix = sharpConv * m_rgbctx.fRGB;
                     break;
                 case eConvType::IntensivSharper:
-                    newpix = iSharpConv * m_rgbctx.fRGB;
+                    newpix = iTopSobel * m_rgbctx.fRGB;
                     break;
                 case eConvType::Identity:
                     newpix = identConv * m_rgbctx.fRGB;
@@ -439,6 +442,7 @@ void MainWindow::convolveNxN(const QImage &qimg, eConvType type)
         }
     pm2.convertFromImage(im2);
     m_imgScreen.setPixmap(pm2);
+    m_currSaveImg = QImage{im2};
     m_val = ui->spinBox->value();
 
 }
@@ -480,6 +484,7 @@ void MainWindow::convolveNxNWorker(const QImage &qimg, eConvType type, int w, in
             im2.setPixel(j, i, m_rgbdata.at(get_at(j,i, qimg.width(), total_len)));
         }
     pm2.convertFromImage(im2);
+    m_currSaveImg = QImage{im2};
     m_imgScreen.setPixmap(pm2);
     m_val = ui->spinBox->value();
 }
@@ -538,6 +543,7 @@ void MainWindow::convolveNxNAccel(const QImage &gimg, eConvType type)
         }
     pm2.convertFromImage(im2);
     m_imgScreen.setPixmap(pm2);
+    m_currSaveImg = QImage{im2};
 
     m_gpuAccel = true;
     m_val = ui->spinBox->value();
@@ -573,6 +579,7 @@ void MainWindow::to_gray(const QPixmap &ref, std::vector<unsigned int> & data)
             im2.setPixel(j, i, data.at(get_at(j,i, qimg.width(), total_len)));
         }
     pm2.convertFromImage(im2);
+    m_currSaveImg = QImage{im2};
     m_imgScreen.setPixmap(pm2);
 }
 
@@ -754,4 +761,15 @@ void MainWindow::copydata()
 void MainWindow::hTimeout()
 {
     m_gpukern.warmer();
+}
+
+void MainWindow::hSave()
+{
+    QMessageBox msg;
+    static int imcount = 1;
+    static char fname [64] ;
+    sprintf(fname, "%d.jpg", imcount++);
+    m_currSaveImg.save(fname);
+    msg.setText("File saved !");
+    msg.exec();
 }

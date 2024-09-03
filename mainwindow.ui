@@ -19,7 +19,7 @@
      <rect>
       <x>0</x>
       <y>659</y>
-      <width>981</width>
+      <width>1121</width>
       <height>61</height>
      </rect>
     </property>
@@ -34,7 +34,7 @@
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>941</width>
+       <width>1101</width>
        <height>41</height>
       </rect>
      </property>
@@ -102,6 +102,13 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="saveImg">
+        <property name="text">
+         <string>save</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </widget>
@@ -109,7 +116,7 @@
     <property name="geometry">
      <rect>
       <x>1060</x>
-      <y>660</y>
+      <y>570</y>
       <width>221</width>
       <height>61</height>
      </rect>
@@ -156,6 +163,9 @@
      </rect>
     </property>
     <layout class="QHBoxLayout" name="screenLayout">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetNoConstraint</enum>
+     </property>
      <item>
       <widget class="QScrollArea" name="scrollArea">
        <property name="verticalScrollBarPolicy">
@@ -241,8 +251,8 @@
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>980</x>
-      <y>560</y>
+      <x>1110</x>
+      <y>480</y>
       <width>160</width>
       <height>80</height>
      </rect>

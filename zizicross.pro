@@ -42,4 +42,5 @@ DISTFILES += \
     data/gridchess.png \
     infolist/mt4software.png \
     infolist/opencl.png \
-    readme.md
+    readme.md \
+    textextract.txt
