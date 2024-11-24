@@ -21,6 +21,5 @@ enum class eConvType
 };
 
 
-struct kernel_t;
 
 #endif // DEFS_H

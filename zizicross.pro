@@ -5,7 +5,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++17
 CONFIG += GPUACCEL
 
-
+DEFINES += ZZX_PROJECT_PATH=\"\\\"$${_PRO_FILE_PWD_}/\\\"\"
 GPUACCEL {
     LIBS += -lOpenCL
 } else {
@@ -17,12 +17,14 @@ GPUACCEL {
 
 SOURCES += \
     convaccel.cpp \
+    kernel.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     convaccel.h \
     defs.h \
+    kernel.h \
     mainwindow.h
 
 FORMS += \

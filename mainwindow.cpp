@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "kernel.h"
 #include <QFileDialog>
 #include <QtMath>
 #include <QDateTime>
@@ -83,64 +84,6 @@ union Bits
 //1,2,3,4,5
 //1,2,3,4,5
 
-struct kernel_t
-{
-    float val3x3[9];
-    float val5x5[25];
-
-    kernel_t()
-    {
-        memset(&val3x3, 0, sizeof(val3x3));
-        memset(&val5x5, 0, sizeof(val5x5));
-    }
-
-    kernel_t(float (&data)[9]) {
-        memcpy(val3x3, data, sizeof(data));
-    }
-
-
-    FRGB operator * (FRGB (&data)[25])
-    {
-        FRGB out;
-        memset(&out , 0, sizeof(out));
-        float sum =0.0f;
-        int res = 0;
-
-        for(int i=0; i < 25; i++)
-            sum += val5x5[i];
-        for(int i=0; i < 3; i++) {
-            for(int ii=0; ii < 25; ii++) {
-                data[ii].rgb[i] *= val5x5[ii];
-                res += data[ii].rgb[i];
-            }
-            out.rgb[i] = res;
-            res = 0;
-
-        }
-        return out;
-    }
-
-    FRGB operator * (FRGB (&data)[9])
-    {
-        FRGB out;
-        memset(&out , 0, sizeof(out));
-        float sum =0.0f;
-        int res = 0;
-
-        for(int i=0; i < 9; i++)
-            sum += val3x3[i];
-        for(int i=0; i < 3; i++) {
-            for(int ii=0; ii < 9; ii++) {             // 1, 2, 3,       1, 1,1,
-                data[ii].rgb[i] *= val3x3[ii];          // 1, 2, 3,   x   1, 1,1,
-                res += data[ii].rgb[i];
-            }
-            out.rgb[i] = res;
-            res = 0;
-
-        }
-        return out;
-    }
-};
 
 static float _sharp[] = {        0.0f,-1.0f,0.0f,
                                 -1.0f,5.0f,-1.0f,
@@ -158,13 +101,13 @@ static float _ident[] = {0.0f, 0.0f, 0.0f,
                            0.0f, 1.0f, 0.0f,
                             0.0f, 0.0f, 0.0f };
 
-static  kernel_t gaussianConv{_blur};
+static  kernel gaussianConv{_blur};
 
-static kernel_t sharpConv{_sharp};
+static kernel sharpConv{_sharp};
 
-static kernel_t iTopSobel {_topsobel};
+static kernel iTopSobel {_topsobel};
 
-static kernel_t identConv {_ident};
+static kernel identConv {_ident};
 
 
 
@@ -210,7 +153,6 @@ void MainWindow::worker_helper::doWork()
                     QRgb t = qRgba(newpix.rgb[0] , newpix.rgb[1], newpix.rgb[2] ,
                                    qAlpha(m_localCtx.rgbchans[4]));
                     p_Parent->m_rgbdata[get_at(x,y, p_Parent->m_currImg.width(), total_len)] = t;
-
                 }
             }
     } else {
@@ -229,13 +171,9 @@ void MainWindow::worker_helper::doWork()
                         }
                     }
                     newpix = *(p_Parent->pCustKernel) * m_localCtx.fRGB2;
-
                     QRgb t = qRgba(newpix.rgb[0] , newpix.rgb[1], newpix.rgb[2] ,
                                    qAlpha(m_localCtx.rgbchans2[4]));
-
                     p_Parent->m_rgbdata[get_at(x,y, p_Parent->m_currImg.width(), total_len)] = t;
-
-
                 }
             }
         }
@@ -261,16 +199,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     for(int i=0; i < 3; i++) m_3x3layout[i] = new QVBoxLayout{parent};
     for(int i=0; i < 5; i++) m_5x5layout[i] = new QVBoxLayout{parent};
-
     for(int i=0; i < 9; i++) m_spin3x3[i] = new QDoubleSpinBox{parent};
     for(int i=0; i < 25; i++) m_spin5x5[i] = new QDoubleSpinBox{parent};
-
     memset((void*)&m_rgbctx, 0 , sizeof(m_rgbctx));
-    pCustKernel = new kernel_t;
-//    ui->grayscale->setDisabled(true);
-//    ui->grayscale->setDown(true);
-
-//    ui->pushButton->setEnabled(false);
+    pCustKernel = new kernel;
     ui->gaussianBlur->setEnabled(false);
     ui->intensiveSharper->setEnabled(false);
     ui->sharper->setEnabled(false);
@@ -460,20 +392,27 @@ void MainWindow::convolveNxN(const QImage &qimg, eConvType type)
 void MainWindow::convolveNxNWorker(const QImage &qimg, eConvType type, int w, int h)
 {
 
+#if 0
     p_helpers[0] = new worker_helper{0, 0, w/2,h/2 , m_val, type, this, m_rgbctx}; //top left
     p_helpers[1] = new worker_helper{w/2, 0 , w, h/2 ,m_val, type, this, m_rgbctx}; // top righ
     p_helpers[2] = new worker_helper{0, h/2, w/2, h ,m_val, type, this, m_rgbctx}; // bottom lrft
     p_helpers[3] = new worker_helper{w/2,h/2, w,h , m_val,type, this, m_rgbctx}; //bottom right
 
+#else
+    int offset = w / CONV_MAX_WORKERS;
 
-    for(int i=0; i < 4; i++) {
+    for(int i=0; i < CONV_MAX_WORKERS; i++) {
+        p_helpers[i] = new worker_helper{i * offset, 0, (i+1) * offset, h , m_val, type, this, m_rgbctx};
+    }
+#endif
+    for(int i=0; i < CONV_MAX_WORKERS; i++) {
         p_helpers[i]->doWork();
     }
-    for(int i=0; i < 4; i++)
+    for(int i=0; i < CONV_MAX_WORKERS; i++)
         p_helpers[i]->m_worker.join();
 
 
-    for(int i=0; i < 4; i++)
+    for(int i=0; i < CONV_MAX_WORKERS; i++)
         delete p_helpers[i];
 
     QImage im2{qimg.width(), qimg.height(), QImage::Format_RGB32};
@@ -587,7 +526,9 @@ void MainWindow::to_gray(const QPixmap &ref, std::vector<unsigned int> & data)
 
 void MainWindow::hClicked()
 {
-    QString fname = QFileDialog::getOpenFileName(this,tr("Open Image"), "/home/ilian/Downloads", tr("Image Files (*.png *.jpg *.bmp)"));
+    QString fname = QFileDialog::getOpenFileName(this,tr("Open Image"),
+                                                 ZZX_PROJECT_PATH,
+                                                  tr("Image Files (*.png *.jpg *.bmp)"));
     m_currentPixmap = QPixmap{fname};
     m_imgScreen.setPixmap(m_currentPixmap);
     m_imgScreen.resize(m_imgScreen.pixmap().size());
@@ -636,17 +577,54 @@ void MainWindow::hGaussianBlr()
 
 void MainWindow::hIntensiveShrp()
 {
-    convolveNxN(m_currImg, eConvType::IntensivSharper);
+
+    if (!m_mtenabled && !m_gpuAccel) {
+        CHECKTIME (
+            convolveNxN(m_currImg, eConvType::IntensivSharper);
+            )
+    } else if (m_mtenabled){
+        CHECKTIME (
+            convolveNxNWorker(m_currImg, eConvType::IntensivSharper, m_currImg.width(), m_currImg.height());
+            )
+    } else if (m_gpuAccel) {
+        CHECKTIME (
+            convolveNxNAccel(m_currImg, eConvType::IntensivSharper);
+            )
+    }
 }
 
 void MainWindow::hSharper()
 {
-    convolveNxN(m_currImg, eConvType::Sharper);
+    if (!m_mtenabled && !m_gpuAccel) {
+        CHECKTIME (
+            convolveNxN(m_currImg, eConvType::Sharper);
+            )
+    } else if (m_mtenabled){
+        CHECKTIME (
+            convolveNxNWorker(m_currImg, eConvType::Sharper, m_currImg.width(), m_currImg.height());
+            )
+    } else if (m_gpuAccel) {
+        CHECKTIME (
+            convolveNxNAccel(m_currImg, eConvType::Sharper);
+            )
+    }
 }
 
 void MainWindow::hClickedIdent()
 {
-    convolveNxN(m_currImg, eConvType::Identity);
+    if (!m_mtenabled && !m_gpuAccel) {
+        CHECKTIME (
+            convolveNxN(m_currImg, eConvType::Identity);
+            )
+    } else if (m_mtenabled){
+        CHECKTIME (
+            convolveNxNWorker(m_currImg, eConvType::Identity, m_currImg.width(), m_currImg.height());
+            )
+    } else if (m_gpuAccel) {
+        CHECKTIME (
+            convolveNxNAccel(m_currImg, eConvType::Identity);
+            )
+    }
 }
 
 void MainWindow::hClickedOriginal()
@@ -664,12 +642,36 @@ void MainWindow::hValChanged(int v)
 
 void MainWindow::hCustKern3x3()
 {
-    convolveNxN(m_currImg, eConvType::Custom3x3);
+    if (!m_mtenabled && !m_gpuAccel) {
+        CHECKTIME (
+            convolveNxN(m_currImg, eConvType::Custom3x3);
+            )
+    } else if (m_mtenabled){
+        CHECKTIME (
+            convolveNxNWorker(m_currImg, eConvType::Custom3x3, m_currImg.width(), m_currImg.height());
+            )
+    } else if (m_gpuAccel) {
+        CHECKTIME (
+            convolveNxNAccel(m_currImg, eConvType::Custom3x3);
+            )
+    }
 }
 
 void MainWindow::hCustKern5x5()
 {
-    convolveNxN(m_currImg, eConvType::Custom5x5);
+    if (!m_mtenabled && !m_gpuAccel) {
+        CHECKTIME (
+            convolveNxN(m_currImg, eConvType::Custom5x5);
+            )
+    } else if (m_mtenabled){
+        CHECKTIME (
+            convolveNxNWorker(m_currImg, eConvType::Custom5x5, m_currImg.width(), m_currImg.height());
+            )
+    } else if (m_gpuAccel) {
+        CHECKTIME (
+            convolveNxNAccel(m_currImg, eConvType::Custom5x5);
+            )
+    }
 }
 
 void MainWindow::hEnableMT(Qt::CheckState state)

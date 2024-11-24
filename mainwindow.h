@@ -15,6 +15,9 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+#ifndef CONV_MAX_WORKERS
+#define CONV_MAX_WORKERS 4
+#endif
 
 struct Warmer : public QThread
 {    Q_OBJECT
@@ -40,6 +43,7 @@ private:
     gpu_kernel* m_kernref;
 };
 
+struct kernel;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -86,7 +90,7 @@ private:
     QImage m_currImg;
     QImage m_currSaveImg;
 
-    kernel_t* pCustKernel;
+    kernel* pCustKernel;
     QString m_filename;
     QPixmap m_currentPixmap;
     QLabel m_imgScreen;
@@ -131,7 +135,7 @@ private:
 
     };
 
-    worker_helper* p_helpers[8];
+    worker_helper* p_helpers[CONV_MAX_WORKERS];
     gpu_kernel m_gpukern;
     Warmer m_warmer;
 
