@@ -290,6 +290,8 @@ void MainWindow::asyncInit()
     QObject::connect(ui->saveImg, SIGNAL(clicked()), this, SLOT(hSave()));
     connect3x3();
     connect5x5();
+
+
 //    m_warmer.start();
 
 }
@@ -304,8 +306,8 @@ void MainWindow::convolveNxN(const QImage &qimg, eConvType type)
 
     if (type != eConvType::Custom5x5) {
         while (m_val-- >= 0)
-        for(y=0; y < qimg.height()-2 ; y++ ) {
-            for(x=0; x < qimg.width()-2; x++)
+        for(y=0; y < qimg.height() ; y++ ) {
+            for(x=0; x < qimg.width(); x++)
             {
                 FRGB newpix;
                 for(int i=0; i < TROW; i++) {
@@ -343,11 +345,10 @@ void MainWindow::convolveNxN(const QImage &qimg, eConvType type)
         }
     } else {
         while (m_val-- >= 0)
-            for(y=0; y < qimg.height()-2 ; y++ ) {
-                for(x=0; x < qimg.width()-2; x++)
+            for(y=0; y < qimg.height() ; y++ ) {
+                for(x=0; x < qimg.width(); x++)
                 {
                     FRGB newpix;
-
                     for(int i=0; i < TROW2; i++) {
                         for(int j=0; j < TCOL2; j++) {
                             m_rgbctx.rgbchans2[i*TROW2+j] = m_rgbdata.at(get_at(x+j,y+i, qimg.width(),total_len));
@@ -399,7 +400,7 @@ void MainWindow::convolveNxNWorker(const QImage &qimg, eConvType type, int w, in
     p_helpers[3] = new worker_helper{w/2,h/2, w,h , m_val,type, this, m_rgbctx}; //bottom right
 
 #else
-    int offset = w / CONV_MAX_WORKERS;
+    int offset = (w / CONV_MAX_WORKERS) ;
 
     for(int i=0; i < CONV_MAX_WORKERS; i++) {
         p_helpers[i] = new worker_helper{i * offset, 0, (i+1) * offset, h , m_val, type, this, m_rgbctx};
@@ -526,6 +527,8 @@ void MainWindow::to_gray(const QPixmap &ref, std::vector<unsigned int> & data)
 
 void MainWindow::hClicked()
 {
+
+
     QString fname = QFileDialog::getOpenFileName(this,tr("Open Image"),
                                                  ZZX_PROJECT_PATH,
                                                   tr("Image Files (*.png *.jpg *.bmp)"));

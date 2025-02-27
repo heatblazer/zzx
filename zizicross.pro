@@ -16,12 +16,14 @@ GPUACCEL {
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    External/_main.cpp \
     convaccel.cpp \
     kernel.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
+    External/imatrix.h \
     convaccel.h \
     defs.h \
     kernel.h \
@@ -39,6 +41,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 
 DISTFILES += \
+    External/CMakeLists.txt \
+    External/README.md \
     data/DSC00454-topaz-denoiseraw-sharpen.jpg \
     data/Screenshot_2024-08-27_12-54-29.png \
     data/gridchess.png \

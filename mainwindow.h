@@ -95,6 +95,7 @@ private:
     QPixmap m_currentPixmap;
     QLabel m_imgScreen;
 
+
     QVBoxLayout* m_3x3layout[3];
     QVBoxLayout* m_5x5layout[5];
 
