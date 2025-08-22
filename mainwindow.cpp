@@ -390,7 +390,7 @@ void MainWindow::convolveNxN(const QImage &qimg, eConvType type)
 //! |------------|-------------|
 //! |------------|-------------|
 //!
-void MainWindow::convolveNxNWorker(const QImage &qimg, eConvType type, int w, int h)
+void MainWindow::convolveNxNWorker(const QImage &qimg, eConvType type, int w, int h,  eMtScreenMode sm)
 {
 
 #if 0
@@ -400,11 +400,25 @@ void MainWindow::convolveNxNWorker(const QImage &qimg, eConvType type, int w, in
     p_helpers[3] = new worker_helper{w/2,h/2, w,h , m_val,type, this, m_rgbctx}; //bottom right
 
 #else
-    int offset = (w / CONV_MAX_WORKERS) ;
+    int xoffset = (w / CONV_MAX_WORKERS) ;
+    int yoffset = (h / CONV_MAX_WORKERS) ;
 
-    for(int i=0; i < CONV_MAX_WORKERS; i++) {
-        p_helpers[i] = new worker_helper{i * offset, 0, (i+1) * offset, h , m_val, type, this, m_rgbctx};
+    switch (sm) {
+    case eMtScreenMode::LineBox:
+        //new by line rects
+        for(int i=0; i < CONV_MAX_WORKERS; i++) {
+            p_helpers[i] = new worker_helper{0, i * yoffset, w, (i + 1) * yoffset , m_val, type, this, m_rgbctx};
+        }
+        break;
+    case eMtScreenMode::SpatialRect:
+        for(int i=0; i < CONV_MAX_WORKERS; i++) {
+            p_helpers[i] = new worker_helper{i * xoffset, 0, (i+1) * xoffset, h , m_val, type, this, m_rgbctx};
+        }
+        break;
+    default:
+        break;
     }
+
 #endif
     for(int i=0; i < CONV_MAX_WORKERS; i++) {
         p_helpers[i]->doWork();

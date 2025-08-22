@@ -3,7 +3,6 @@
 
 typedef struct __attribute__((packed))
 FRGB {
-
     unsigned int rgb[3];
 } FRGB;
 
@@ -20,6 +19,10 @@ enum class eConvType
     COUNT
 };
 
-
+enum class eMtScreenMode {
+    LineBox,
+    SpatialRect,
+    COUNT
+};
 
 #endif // DEFS_H

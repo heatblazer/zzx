@@ -58,7 +58,7 @@ private:
     Ui::MainWindow *ui;
 
     void convolveNxN(const QImage &qimg, eConvType type);
-    void convolveNxNWorker(const QImage &qimg, eConvType type, int w, int h);
+    void convolveNxNWorker(const QImage &qimg, eConvType type, int w, int h, eMtScreenMode sm = eMtScreenMode::LineBox);
     void convolveNxNAccel(const QImage& gimg, eConvType type);
     void hConvMT();
     void to_gray(const QPixmap& ref, std::vector<unsigned int>& );
@@ -133,6 +133,7 @@ private:
         MainWindow* p_Parent;
         std::thread m_worker;
         struct rgbctx m_localCtx;
+        std::vector<unsigned int> m_local_rgbdata;
 
     };
 
