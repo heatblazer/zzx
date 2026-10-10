@@ -1,3 +1,4 @@
+#if 0 //UNUSED
 #include <iostream>
 #include <cstdint>
 #include "imatrix.h"
@@ -170,3 +171,4 @@ int main_func()
 
     return 0;
 }
+#endif

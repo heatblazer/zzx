@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "kernel.h"
 #include <QFileDialog>
 #include <QtMath>
 #include <QDateTime>
@@ -12,6 +11,8 @@
 #include <QElapsedTimer>
 #include <QMessageBox>
 #include <cstdio>
+
+#include "kernel.h"
 
 #define CONCAT_(x,y) x##y
 #define CONCAT(x,y) CONCAT_(x,y)
@@ -31,6 +32,7 @@ QElapsedTimer CONCAT(sb_, __LINE__); \
 #define LSBYTE 0x000000ff
 
 //dummy data to test QImg RGB ordering
+[[maybe_unused]]
 alignas(alignof(unsigned int)) static uchar dbg[] = {
     0xde,0xca,0xfb,0xad,
     0xff,0x00,0x00,0x00,
@@ -39,11 +41,6 @@ alignas(alignof(unsigned int)) static uchar dbg[] = {
     0xff,0x00,0x00,0x00,
     0xff,0x00,0x00,0x00
 };
-
-//    QImage t {dbg, 2,3, QImage::Format::Format_RGB32};
-//    Bits<unsigned int> tdbg = {.val = t.pixel(0,0)}; //   to_gray(ref, data)
-
-
 
 inline int get_at(int x, int y, int rows, const int err = 256 * 256)
 {
@@ -101,13 +98,13 @@ static float _ident[] = {0.0f, 0.0f, 0.0f,
                            0.0f, 1.0f, 0.0f,
                             0.0f, 0.0f, 0.0f };
 
-static  kernel gaussianConv{_blur};
+static ckernel<float> gaussianConv{_blur};
 
-static kernel sharpConv{_sharp};
+static ckernel<float> sharpConv{_sharp};
 
-static kernel iTopSobel {_topsobel};
+static ckernel<float> iTopSobel {_topsobel};
 
-static kernel identConv {_ident};
+static ckernel<float> identConv {_ident};
 
 
 
@@ -202,7 +199,7 @@ MainWindow::MainWindow(QWidget *parent)
     for(int i=0; i < 9; i++) m_spin3x3[i] = new QDoubleSpinBox{parent};
     for(int i=0; i < 25; i++) m_spin5x5[i] = new QDoubleSpinBox{parent};
     memset((void*)&m_rgbctx, 0 , sizeof(m_rgbctx));
-    pCustKernel = new kernel;
+    pCustKernel = new ckernel<float>;
     ui->gaussianBlur->setEnabled(false);
     ui->intensiveSharper->setEnabled(false);
     ui->sharper->setEnabled(false);
@@ -301,13 +298,12 @@ void MainWindow::convolveNxN(const QImage &qimg, eConvType type)
 {
     int x, y;
     int total_len = m_rgbdata.size();
-//    total_len = qimg.width() * qimg.height() ;
 
 
     if (type != eConvType::Custom5x5) {
         while (m_val-- >= 0)
-        for(y=0; y < qimg.height() ; y++ ) {
-            for(x=0; x < qimg.width(); x++)
+        for(y=3; y < qimg.height() ; y++ ) {
+            for(x=3; x < qimg.width(); x++)
             {
                 FRGB newpix;
                 for(int i=0; i < TROW; i++) {

@@ -1,10 +1,9 @@
 #ifndef DEFS_H
 #define DEFS_H
-
-typedef struct __attribute__((packed))
+struct __attribute__((packed))
 FRGB {
     unsigned int rgb[3];
-} FRGB;
+} ;
 
 
 enum class eConvType

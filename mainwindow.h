@@ -1,13 +1,14 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-#include "defs.h"
-#include "convaccel.h"
+#include <QDoubleSpinBox>
+#include <QLabel>
 #include <QMainWindow>
 #include <QPixmap>
-#include <QLabel>
-#include <QVBoxLayout>
-#include <QDoubleSpinBox>
 #include <QThread>
+#include <QVBoxLayout>
+#include "convaccel.h"
+#include "defs.h"
+#include "kernel.h"
 
 #include <functional>
 #include <thread>
@@ -90,7 +91,7 @@ private:
     QImage m_currImg;
     QImage m_currSaveImg;
 
-    kernel* pCustKernel;
+    ckernel<float>* pCustKernel;
     QString m_filename;
     QPixmap m_currentPixmap;
     QLabel m_imgScreen;

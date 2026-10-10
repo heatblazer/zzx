@@ -18,7 +18,6 @@ GPUACCEL {
 SOURCES += \
     External/_main.cpp \
     convaccel.cpp \
-    kernel.cpp \
     main.cpp \
     mainwindow.cpp
 

@@ -1,9 +1,10 @@
 #pragma once
-#include <cstring>
-#include <cstdio>
-#include <functional>
-#include <iostream>
+#if 0 // UNUSED
 #include <array>
+#include <cstdio>
+#include <cstring>
+#include <functional>
+#include <stdexcept>
 ///
 /// \brief compile time only matrix class
 ///
@@ -170,8 +171,8 @@ public:
     {
 
         std::array<T, ROW> row;
-        loop([this, &col, &row](int i, int j)
-             {
+        loop([this, &col, &row](int i, int j) {
+            (void) i;
                  row[j] = getAt(col, j);
              });
         return row ;
@@ -386,3 +387,4 @@ public:
 
 } //!mat
 
+#endif
